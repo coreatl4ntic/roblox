@@ -153,7 +153,7 @@ Tabs.Player:Keybind({
 
 Tabs.Player:Slider({
     Title = "ความเร็วในการบิน",
-    Min = 15,
+    Min = 0,
     Max = 20,
     Rounding = 1,
     Value = 20,
