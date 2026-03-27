@@ -131,8 +131,8 @@ local Window = Library:Window({
 
 local Tabs = {
     Main = Window:Tab({Title = "Main", Icon = "home"}),
-    Farming = Window:Tab({Title = "Farming", Icon = "zap"}),
-    Upgrades = Window:Tab({Title = "Upgrades", Icon = "trending-up"}),
+    Farm = Window:Tab({Title = "Farming", Icon = "zap"}),
+    Upgrade = Window:Tab({Title = "Upgrades", Icon = "trending-up"}),
     Settings = Window:Tab({Title = "Settings", Icon = "settings"})
 }
 
