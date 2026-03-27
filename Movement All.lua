@@ -8,12 +8,19 @@ if getgenv().FlyScript_Run then
     getgenv().FlyScript_Run = false
     task.wait(0.2)
 end
+if getgenv().FlyScript_AntiAFK then
+    getgenv().FlyScript_AntiAFK:Disconnect()
+    getgenv().FlyScript_AntiAFK = nil
+end
 getgenv().FlyScript_Run = true
 
 --// Variables
 local flying = false
-local speedfly = 1
+local speedfly = 20
 local InfiniteJump = false
+local NoclipOnFly = false
+local noclipConn
+local originalCanCollide = {}
 
 --// Infinite Jump Logic
 UserInputService.JumpRequest:Connect(function()
@@ -22,9 +29,10 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
---// Fly Logic
-local function ToggleFly()
-    flying = not flying
+--// Fly & Noclip Logic
+local function SetFly(v)
+    if flying == v then return end
+    flying = v
     if flying then
         local T = lplayer.Character.HumanoidRootPart
         local CONTROL = {F = 0, B = 0, L = 0, R = 0}
@@ -65,7 +73,31 @@ local function ToggleFly()
             if lplayer.Character and lplayer.Character:FindFirstChild("Humanoid") then
                 lplayer.Character.Humanoid.PlatformStand = false
             end
+            if noclipConn then
+                noclipConn:Disconnect()
+                noclipConn = nil
+            end
+            for part, original in pairs(originalCanCollide) do
+                if part and part.Parent then
+                    part.CanCollide = original
+                end
+            end
+            originalCanCollide = {}
         end)
+
+        if NoclipOnFly then
+            noclipConn = game:GetService("RunService").Stepped:Connect(function()
+                if not flying or not getgenv().FlyScript_Run then return end
+                if lplayer.Character then
+                    for _, v in pairs(lplayer.Character:GetDescendants()) do
+                        if v:IsA("BasePart") and v.CanCollide then
+                            originalCanCollide[v] = v.CanCollide
+                            v.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        end
 
         local w_conn, s_conn, a_conn, d_conn
         local w_up, s_up, a_up, d_up
@@ -112,16 +144,16 @@ Tabs.Player:Keybind({
     Value = false,
     Key = Enum.KeyCode.F,
     Callback = function(Key, Value)
-        if flying ~= Value then ToggleFly() end
+        SetFly(Value)
     end
 })
 
 Tabs.Player:Slider({
     Title = "ความเร็วในการบิน",
-    Min = 20,
+    Min = 15,
     Max = 20,
     Rounding = 1,
-    Value = 1,
+    Value = 20,
     Callback = function(Value)
         speedfly = Value
     end
@@ -132,6 +164,14 @@ Tabs.Player:Toggle({
     Value = false,
     Callback = function(Value)
         InfiniteJump = Value
+    end
+})
+
+Tabs.Player:Toggle({
+    Title = "เดินทะลุขณะบิน (Noclip on Fly)",
+    Value = false,
+    Callback = function(Value)
+        NoclipOnFly = Value
     end
 })
 
@@ -177,6 +217,27 @@ Tabs.Player:Button({
     Callback = function()
         if lplayer.Character and lplayer.Character:FindFirstChild("Humanoid") then
             lplayer.Character.Humanoid.JumpPower = 50
+        end
+    end
+})
+
+Tabs.Player:Section({Title = "Misc"})
+
+Tabs.Player:Toggle({
+    Title = "ระบบกันหลุด (Anti-AFK)",
+    Value = true,
+    Callback = function(Value)
+        if Value then
+            local bb = game:GetService("VirtualUser")
+            getgenv().FlyScript_AntiAFK = lplayer.Idled:Connect(function()
+                bb:CaptureController()
+                bb:ClickButton2(Vector2.new())
+            end)
+        else
+            if getgenv().FlyScript_AntiAFK then
+                getgenv().FlyScript_AntiAFK:Disconnect()
+                getgenv().FlyScript_AntiAFK = nil
+            end
         end
     end
 })
