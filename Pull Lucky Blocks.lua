@@ -41,7 +41,7 @@ local Settings = {
     AutoCarry = false,
     ExcludeRarities = {},
     AutoSteal = false,
-    AntiAFK = false,
+    AntiAFK = true,
     Fly = false,
     FlySpeed = 50
 }
