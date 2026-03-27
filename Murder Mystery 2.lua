@@ -427,7 +427,7 @@ end)
 -- [UI Setup]
 local Window = Library:Window({
     Title = "Murder Mystery 2 Admin Panel",
-    Desc = "by atl4ntic. | Stellar Edition",
+    Desc = "by atl4ntic. | Menu Edition",
     Icon = "box",
     Theme = "Dark",
     Config = {
@@ -436,7 +436,7 @@ local Window = Library:Window({
     },
     CloseUIButton = {
         Enabled = true,
-        Text = "Stellar"
+        Text = "Menu"
     }
 })
 
