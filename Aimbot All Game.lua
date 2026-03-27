@@ -517,7 +517,7 @@ local function AddCrosshair()
         ServiceConnections.CrosshairConnection = RunService.RenderStepped:Connect(function()
             if not AxisX or not AxisY then return end
             local CrosshairColor = Environment.Crosshair.CrosshairSettings.Rainbow and GetRainbowColor() or GetColor(Environment.Crosshair.CrosshairSettings.Color)
-            local Enabled = Environment.Settings.Enabled and Environment.Crosshair.CrosshairSettings.Enabled
+            local Enabled = Environment.Crosshair.CrosshairSettings.Enabled
             Environment.Crosshair.Parts.LeftLine.Visible = Enabled
             Environment.Crosshair.Parts.LeftLine.Color = CrosshairColor
             Environment.Crosshair.Parts.LeftLine.Thickness = Environment.Crosshair.CrosshairSettings.Thickness
@@ -632,7 +632,7 @@ local function Load()
     ServiceConnections.PlayerAddedConnection = Players.PlayerAdded:Connect(function(v) if v ~= LocalPlayer then Wrap(v) end end)
     ServiceConnections.PlayerRemovingConnection = Players.PlayerRemoving:Connect(function(v) if v ~= LocalPlayer then UnWrap(v) end end)
     ServiceConnections.RenderSteppedConnection = RunService.RenderStepped:Connect(function()
-        if Environment.FOVSettings.Enabled and Environment.Settings.Enabled then
+        if Environment.FOVSettings.Enabled then
             Environment.FOVCircle.Radius = Environment.FOVSettings.Amount
             Environment.FOVCircle.Thickness = Environment.FOVSettings.Thickness
             Environment.FOVCircle.Filled = Environment.FOVSettings.Filled
