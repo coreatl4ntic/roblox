@@ -18,10 +18,7 @@ local InfiniteJump = false
 local ESPToggle = false
 local CoinFarmToggle = false
 local XrayToggle = false
--- local AimlockToggle = false
--- local SilentAimToggle = false
-local AutoShootToggle = false
-local TriggerBotToggle = false
+local AimlockToggle = false
 local HighlightGunsToggle = false
 local ReturnDelay = 3
 local LastCFrame = nil
@@ -71,20 +68,7 @@ local function GetPlayerNames()
     return names
 end
 
-local function ShootAt(targetPart)
-    if not targetPart then return end
-    if lplayer.Character then
-        for _, tool in pairs(lplayer.Character:GetChildren()) do
-            if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "Gun") then
-                local remote = tool:FindFirstChild("Remote") or tool:FindFirstChild("Shoot") or tool:FindFirstChild("Fire")
-                if remote then
-                    remote:FireServer(targetPart.Position, targetPart.Position)
-                end
-                break
-            end
-        end
-    end
-end
+
 
 local GunHighlights = {}
 local function CreateGunHighlight(gun)
@@ -392,29 +376,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Silent Aim & Auto Shoot Logic
-    if SilentAimToggle or AutoShootToggle then
-        local target = GetClosestToMouse()
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            if AutoShootToggle then
-                ShootAt(target.Character.HumanoidRootPart)
-            end
-        end
-    end
-
-    -- Trigger Bot Logic
-    if TriggerBotToggle then
-        local target = Mouse.Target
-        if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
-            local plr = plrs:GetPlayerFromCharacter(target.Parent)
-            if plr and plr ~= lplayer then
-                local targetIsMurderer = plr.Backpack:FindFirstChild("Knife") or plr.Character:FindFirstChild("Knife")
-                if targetIsMurderer then
-                    ShootAt(target)
-                end
-            end
-        end
-    end
 end)
 
 task.spawn(function()
@@ -622,29 +583,7 @@ Tabs.Aim:Toggle({
     end
 })
 
--- Tabs.Aim:Toggle({
---     Title = "Silent Aim (ยิงอัตโนมัติเมื่อเล็งใกล้เป้าหมาย)",
---     Value = false,
---     Callback = function(Value)
---         SilentAimToggle = Value
---     end
--- })
 
--- Tabs.Aim:Toggle({
---     Title = "Auto Shoot (ยิงฆาตกรอัตโนมัติ)",
---     Value = false,
---     Callback = function(Value)
---         AutoShootToggle = Value
---     end
--- })
-
--- Tabs.Aim:Toggle({
---     Title = "Trigger Bot (ยิงเมื่อศัตรูอยู่ในเป้า)",
---     Value = false,
---     Callback = function(Value)
---         TriggerBotToggle = Value
---     end
--- })
 
 Tabs.Aim:Section({Title = "FOV Settings"})
 
@@ -688,9 +627,9 @@ Tabs.Aim:Slider({
 
 Tabs.Aim:ColorPicker({
     Title = "สีวง FOV",
-    Default = Color3.fromRGB(255, 255, 255),
-    Callback = function(Value)
-        FOVSettings.Color = Value
+    Value = Color3.fromRGB(255, 255, 255),
+    Callback = function(r, g, b)
+        FOVSettings.Color = Color3.fromRGB(r, g, b)
     end
 })
 
@@ -773,11 +712,10 @@ Tabs.Teleport:Section({Title = "Players"})
 
 local PlayerDropdown = Tabs.Teleport:Dropdown({
     Title = "เลือกชื่อตัวละคร",
-    Options = GetPlayerNames(),
-    Default = {},
-    MultiSelect = false,
-    Callback = function(Options)
-        local TargetName = Options[1]
+    List = GetPlayerNames(),
+    Value = nil,
+    Multi = false,
+    Callback = function(TargetName)
         local Target = plrs:FindFirstChild(TargetName)
         if Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
             if lplayer.Character and lplayer.Character:FindFirstChild("HumanoidRootPart") then
