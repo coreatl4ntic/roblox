@@ -1,4 +1,4 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/StarsationSetanya/main/refs/heads/main/framework.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/coreatl4ntic/library/refs/heads/main/framework.lua"))()
 
 -- [services]
 local RunService = game:GetService("RunService")
