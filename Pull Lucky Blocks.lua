@@ -116,7 +116,7 @@ end
 
 local Window = Library:Window({
     Title = "Pull Lucky Blocks Script",
-    Desc = "by Phemonaz | Stellar Edition",
+    Desc = "by atl4ntic. | Menu Edition",
     Icon = "box",
     Theme = "Dark",
     Config = {
@@ -125,15 +125,15 @@ local Window = Library:Window({
     },
     CloseUIButton = {
         Enabled = true,
-        Text = "Stellar"
+        Text = "Menu"
     }
 })
 
 local Tabs = {
-    Main = Window:Tab({ Title = "Main", Icon = "star" }),
-    Farm = Window:Tab({ Title = "Farm", Icon = "bot" }),
-    Upgrade = Window:Tab({ Title = "Upgrade", Icon = "wrench" }),
-    Settings = Window:Tab({ Title = "Settings", Icon = "cog" })
+    Main = Window:Tab({Title = "Main", Icon = "home"}),
+    Farming = Window:Tab({Title = "Farming", Icon = "zap"}),
+    Upgrades = Window:Tab({Title = "Upgrades", Icon = "trending-up"}),
+    Settings = Window:Tab({Title = "Settings", Icon = "settings"})
 }
 
 local connections = {}
