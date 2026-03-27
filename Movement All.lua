@@ -21,6 +21,8 @@ local InfiniteJump = false
 local NoclipOnFly = false
 local noclipConn
 local originalCanCollide = {}
+local isSetup = true
+task.delay(1, function() isSetup = false end)
 
 --// Infinite Jump Logic
 UserInputService.JumpRequest:Connect(function()
@@ -31,6 +33,7 @@ end)
 
 --// Fly & Noclip Logic
 local function SetFly(v)
+    if isSetup then return end
     if flying == v then return end
     flying = v
     if flying then
@@ -169,7 +172,7 @@ Tabs.Player:Toggle({
 
 Tabs.Player:Toggle({
     Title = "เดินทะลุขณะบิน (Noclip on Fly)",
-    Value = false,
+    Value = true,
     Callback = function(Value)
         NoclipOnFly = Value
     end
