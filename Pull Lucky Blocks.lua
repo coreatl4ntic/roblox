@@ -1,5 +1,12 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/coreatl4ntic/library/refs/heads/main/framework.lua"))()
 
+--// Cleanup previous execution
+if getgenv().LuckyBlock_Run then
+    getgenv().LuckyBlock_Run = false
+    task.wait(0.5)
+end
+getgenv().LuckyBlock_Run = true
+
 -- [services]
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -43,81 +50,183 @@ local Settings = {
     AutoSteal = false,
     AntiAFK = true,
     Fly = false,
-    FlySpeed = 50
+    FlySpeed = 50,
+    Invisibility = false,
+    InvisTransparency = 0.5,
+    Noclip = false,
+    NoclipOnFly = true
 }
 
-local function ToggleFly()
-    if not Settings.Fly then return end
-    local T = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not T then return end
+local isSetup = true
+local flying = false
+task.delay(1, function() isSetup = false end)
+
+local function SetFly(v)
+    if isSetup then return end
+    if flying == v then return end
+    flying = v
+    Settings.Fly = v
     
-    local CONTROL = {F = 0, B = 0, L = 0, R = 0}
-    local lCONTROL = {F = 0, B = 0, L = 0, R = 0}
-    local SPEED = 0
+    if flying then
+        local T = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not T then return end
+        
+        local CONTROL = {F = 0, B = 0, L = 0, R = 0}
+        local lCONTROL = {F = 0, B = 0, L = 0, R = 0}
+        local SPEED = 0
 
-    local BG = Instance.new('BodyGyro', T)
-    local BV = Instance.new('BodyVelocity', T)
-    BG.P = 9e4
-    BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-    BG.cframe = T.CFrame
-    BV.velocity = Vector3.new(0, 0.1, 0)
-    BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+        local BG = Instance.new('BodyGyro', T)
+        local BV = Instance.new('BodyVelocity', T)
+        BG.P = 9e4
+        BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        BG.cframe = T.CFrame
+        BV.velocity = Vector3.new(0, 0.1, 0)
+        BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
 
-    task.spawn(function()
-        repeat task.wait()
-            if not LocalPlayer.Character:FindFirstChild("Humanoid") then break end
-            LocalPlayer.Character.Humanoid.PlatformStand = true
-            
-            if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 then
-                SPEED = Settings.FlySpeed
-            else
-                SPEED = 0
+        task.spawn(function()
+            repeat task.wait()
+                if not getgenv().LuckyBlock_Run then break end
+                if not LocalPlayer.Character:FindFirstChild("Humanoid") then break end
+                LocalPlayer.Character.Humanoid.PlatformStand = true
+                
+                if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 then
+                    SPEED = Settings.FlySpeed
+                else
+                    SPEED = 0
+                end
+                
+                if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 then
+                    BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+                    lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
+                elseif SPEED == 0 then
+                    BV.velocity = Vector3.new(0, 0.1, 0)
+                else
+                    BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+                end
+                BG.cframe = workspace.CurrentCamera.CoordinateFrame
+            until not flying or not getgenv().LuckyBlock_Run
+            BG:Destroy()
+            BV:Destroy()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.PlatformStand = false
             end
-            
-            if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 then
-                BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
-                lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
-            elseif SPEED == 0 then
-                BV.velocity = Vector3.new(0, 0.1, 0)
-            else
-                BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+        end)
+
+        local Mouse = LocalPlayer:GetMouse()
+        local connections = {}
+        table.insert(connections, Mouse.KeyDown:Connect(function(key) 
+            if key:lower() == "w" then CONTROL.F = 1 
+            elseif key:lower() == "s" then CONTROL.B = -1 
+            elseif key:lower() == "a" then CONTROL.L = -1 
+            elseif key:lower() == "d" then CONTROL.R = 1 
+            end 
+        end))
+        table.insert(connections, Mouse.KeyUp:Connect(function(key) 
+            if key:lower() == "w" then CONTROL.F = 0 
+            elseif key:lower() == "s" then CONTROL.B = 0 
+            elseif key:lower() == "a" then CONTROL.L = 0 
+            elseif key:lower() == "d" then CONTROL.R = 0 
+            end 
+        end))
+
+        task.spawn(function()
+            repeat task.wait() until not flying or not getgenv().LuckyBlock_Run
+            for _, c in ipairs(connections) do c:Disconnect() end
+        end)
+    end
+end
+
+local function setCharacterTransparency(transparency)
+    local character = LocalPlayer.Character
+    if character then
+        for _, obj in pairs(character:GetDescendants()) do
+            if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then
+                obj.Transparency = transparency
+            elseif obj:IsA("Decal") then
+                obj.Transparency = transparency
             end
-            BG.cframe = workspace.CurrentCamera.CoordinateFrame
-        until not Settings.Fly
-        BG:Destroy()
-        BV:Destroy()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.PlatformStand = false
         end
-    end)
+    end
+end
 
-    local Mouse = LocalPlayer:GetMouse()
-    local connections = {}
-    table.insert(connections, Mouse.KeyDown:Connect(function(key) 
-        if key:lower() == "w" then CONTROL.F = 1 
-        elseif key:lower() == "s" then CONTROL.B = -1 
-        elseif key:lower() == "a" then CONTROL.L = -1 
-        elseif key:lower() == "d" then CONTROL.R = 1 
-        end 
-    end))
-    table.insert(connections, Mouse.KeyUp:Connect(function(key) 
-        if key:lower() == "w" then CONTROL.F = 0 
-        elseif key:lower() == "s" then CONTROL.B = 0 
-        elseif key:lower() == "a" then CONTROL.L = 0 
-        elseif key:lower() == "d" then CONTROL.R = 0 
-        end 
-    end))
+local function toggleInvisibility(v)
+    if isSetup then return end
+    Settings.Invisibility = v
+    if v then
+        setCharacterTransparency(Settings.InvisTransparency)
+        local character = LocalPlayer.Character
+        if character then
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            if humanoidRootPart then
+                local savedpos = humanoidRootPart.CFrame
+                local seatTeleportPosition = Vector3.new(-25.95, 400, 3537.55)
+                local voidLevelYThreshold = -50
+                
+                if seatTeleportPosition.Y < voidLevelYThreshold then
+                    Window:Notify({Title = "Invis Error", Desc = "Seat position is in the void!", Time = 3})
+                    Settings.Invisibility = false
+                    return
+                end
 
-    task.spawn(function()
-        repeat task.wait() until not Settings.Fly
-        for _, c in ipairs(connections) do c:Disconnect() end
-    end)
+                task.wait(0.05)
+                pcall(function() character:MoveTo(seatTeleportPosition) end)
+                task.wait(0.05)
+                
+                if not character:FindFirstChild("HumanoidRootPart") or character.HumanoidRootPart.Position.Y < voidLevelYThreshold then
+                    pcall(function() character:MoveTo(savedpos) end)
+                    Window:Notify({Title = "Invis Failed", Desc = "Void detected. Returned to start.", Time = 3})
+                    Settings.Invisibility = false
+                    setCharacterTransparency(0)
+                    return
+                end
+
+                local Seat = Instance.new('Seat')
+                Seat.Parent = workspace
+                Seat.Anchored = false
+                Seat.CanCollide = false
+                Seat.Name = 'invischair'
+                Seat.Transparency = 1
+                Seat.CastShadow = false
+                Seat.Position = seatTeleportPosition
+                local Weld = Instance.new("Weld")
+                Weld.Part0 = Seat
+                local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+                if torso then
+                    Weld.Part1 = torso
+                    Weld.Parent = Seat
+                    task.wait()
+                    pcall(function() Seat.CFrame = savedpos end)
+                else
+                    Seat:Destroy()
+                end
+            end
+        end
+    else
+        setCharacterTransparency(0)
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid.Sit = false end
+            for _, obj in ipairs(character:GetDescendants()) do
+                if obj.Name == "invischair" then pcall(function() obj:Destroy() end) end
+            end
+        end
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj.Name == "invischair" then pcall(function() obj:Destroy() end) end
+        end
+        Window:Notify({Title = "Invisibility", Desc = "Invisibility Disabled - Cleaned up seats", Time = 3})
+    end
+end
+
+local function toggleNoclip(v)
+    if isSetup then return end
+    Settings.Noclip = v
 end
 
 local Window = Library:Window({
     Title = "Pull Lucky Blocks Script",
     Desc = "by atl4ntic. | Menu Edition",
-    Icon = "box",
+    Icon = 105059922903197,
     Theme = "Dark",
     Config = {
         Keybind = Enum.KeyCode.LeftControl,
@@ -133,6 +242,7 @@ local Tabs = {
     Main = Window:Tab({Title = "Main", Icon = "home"}),
     Farm = Window:Tab({Title = "Farming", Icon = "zap"}),
     Upgrade = Window:Tab({Title = "Upgrades", Icon = "trending-up"}),
+    Player = Window:Tab({Title = "Player", Icon = "user"}),
     Settings = Window:Tab({Title = "Settings", Icon = "settings"})
 }
 
@@ -269,27 +379,6 @@ do
         end
     })
 
-    Tabs.Main:Toggle({
-        Title = "Fly",
-        Desc = "Allows you to fly around the map",
-        Value = false,
-        Callback = function(v)
-            Settings.Fly = v
-            if v then ToggleFly() end
-        end
-    })
-
-    Tabs.Main:Slider({
-        Title = "Fly Speed",
-        Desc = "Adjust how fast you fly",
-        Min = 10,
-        Max = 300,
-        Rounding = 0,
-        Value = 50,
-        Callback = function(v)
-            Settings.FlySpeed = v
-        end
-    })
 end
 
 -- [Upgrade Tab]
@@ -579,6 +668,76 @@ do
     })
 end
 
+-- [Player Tab]
+do
+    Tabs.Player:Section({Title = "Movement Exploits"})
+
+    Tabs.Player:Keybind({
+        Title = "Fly",
+        Desc = "Toggle flight (Press F)",
+        Value = false,
+        Key = Enum.KeyCode.F,
+        Callback = function(Key, Value)
+            SetFly(Value)
+        end
+    })
+
+    Tabs.Player:Slider({
+        Title = "Fly Speed",
+        Desc = "Adjust how fast you fly",
+        Min = 10,
+        Max = 300,
+        Rounding = 0,
+        Value = 200,
+        Callback = function(v)
+            Settings.FlySpeed = v
+        end
+    })
+
+    Tabs.Player:Keybind({
+        Title = "Invisibility",
+        Desc = "Seat Method - Press G to toggle",
+        Value = false,
+        Key = Enum.KeyCode.G,
+        Callback = function(Key, Value)
+            toggleInvisibility(Value)
+        end
+    })
+
+    Tabs.Player:Slider({
+        Title = "Invis Transparency",
+        Desc = "How transparent you look to yourself",
+        Min = 0,
+        Max = 100,
+        Rounding = 0,
+        Value = 50,
+        Callback = function(v)
+            Settings.InvisTransparency = v / 100
+            if Settings.Invisibility then
+                setCharacterTransparency(Settings.InvisTransparency)
+            end
+        end
+    })
+
+    Tabs.Player:Toggle({
+        Title = "Noclip on Fly",
+        Desc = "Automatic noclip during flight only",
+        Value = true,
+        Callback = function(v)
+            Settings.NoclipOnFly = v
+        end
+    })
+
+    -- Tabs.Player:Toggle({
+    --     Title = "Manual Noclip",
+    --     Desc = "Standard collision toggle",
+    --     Value = false,
+    --     Callback = function(v)
+    --         toggleNoclip(v)
+    --     end
+    -- })
+end
+
 -- [Settings Tab]
 do
     Tabs.Settings:Section({Title = "Script Information"})
@@ -593,6 +752,10 @@ do
             Settings.AutoDumbell = false
             Settings.AutoCarry = false
             Settings.AutoSteal = false
+            Settings.Invisibility = false
+            Settings.Noclip = false
+            toggleInvisibility(false)
+            toggleNoclip(false)
             for _, conn in pairs(connections) do conn:Disconnect() end
             -- Assuming the library has a way to destroy, but usually simply stopping loops is enough.
         end
@@ -604,3 +767,33 @@ Window:Notify({
     Desc = "Targeting Lucky Blocks. Good luck!",
     Time = 5
 })
+
+-- [Persistence & Lifecycle]
+local function onCharacterAdded(char)
+    task.wait(1) -- Wait for character to properly load
+    if Settings.Fly then
+        SetFly(true)
+    end
+    if Settings.Invisibility then
+        toggleInvisibility(true)
+    end
+    if Settings.Noclip then
+        toggleNoclip(true)
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+if LocalPlayer.Character then task.spawn(onCharacterAdded, LocalPlayer.Character) end
+
+-- [Global Noclip Handler]
+RunService.Stepped:Connect(function()
+    if not getgenv().LuckyBlock_Run then return end
+    local shouldNoclip = Settings.Noclip or (Settings.Fly and Settings.NoclipOnFly)
+    if shouldNoclip and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
