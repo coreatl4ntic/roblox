@@ -1,3 +1,6 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/coreatl4ntic/library/refs/heads/main/framework.lua"))()
 
 local Window = Library:Window({
@@ -38,8 +41,8 @@ local claimGift = ReplicatedStorage
     :WaitForChild("ClaimGift")
 local autoClaiming = false
 local ACPR = Tabs.Main:Toggle({
-    Title = "ออโต้เคลมรางวัล",
-    Desc = "เคลมรางวัลอัตโนมัติ",
+    Title = "Auto Claim Playtime Rewards",
+    Desc = "Automatically claim rewards based on playtime",
     Value = false,
     Callback = function(state)
         autoClaiming = state
@@ -72,8 +75,8 @@ local rebirth = ReplicatedStorage
     :WaitForChild("Rebirth")
 local running = false
 local AR = Tabs.Main:Toggle({
-    Title = "ออโต้เกิดใหม่",
-    Desc = "เกิดใหม่โดยอัตโนมัติ",
+    Title = "Auto Rebirth",
+    Desc = "Automatically rebirth when possible",
     Value = false,
     Callback = function(state)
         running = state
@@ -104,8 +107,8 @@ local claim = ReplicatedStorage
     :WaitForChild("ClaimPassReward")
 local running = false
 local ACEPR = Tabs.Main:Toggle({
-    Title = "ออโต้เคลมโค้ดรางวัล",
-    Desc = "เคลมรางวัลอัตโนมัติ",
+    Title = "Auto Claim Event Pass Rewards",
+    Desc = "Automatically claim free event pass rewards",
     Value = false,
     Callback = function(state)
         running = state
@@ -163,8 +166,8 @@ local codes = {
     -- add more codes here
 }
 Tabs.Main:Button({
-    Title = "แลกโค้ดทั้งหมด",
-    Desc = "แลกโค้ดทั้งหมดที่มี",
+    Title = "Redeem All Codes",
+    Desc = "Redeem all available working codes",
     Callback = function()
         for _, code in ipairs(codes) do
             pcall(function()
@@ -193,8 +196,8 @@ local amount = 1
 local delayTime = 0.5
 local running = false
 local IMS = Tabs.Upgrades:Textbox({
-    Title = "จำนวนความเร็ว",
-    Desc = "จำนวนความเร็วที่จะอัพเกรดแต่ละครั้ง",
+    Title = "Speed Amount",
+    Desc = "Enter the amount of speed to upgrade each time",
     Placeholder = "Number",
     Value = "1",
     Callback = function(Value)
@@ -203,8 +206,8 @@ local IMS = Tabs.Upgrades:Textbox({
 })
 
 local SMS = Tabs.Upgrades:Slider({
-    Title = "ช่วงเวลาอัพเกรด",
-    Desc = "เวลาที่ใช้ในการอัพเกรดแต่ละครั้ง (วินาที)",
+    Title = "Upgrade Interval",
+    Desc = "Time between each upgrade (seconds)",
     Value = 1,
     Min = 0,
     Max = 5,
@@ -215,8 +218,8 @@ local SMS = Tabs.Upgrades:Slider({
 })
 
 local AMS = Tabs.Upgrades:Toggle({
-    Title = "ออโต้เพิ่มความเร็ว",
-    Desc = "เพิ่มความเร็วอัตโนมัติ",
+    Title = "Auto Upgrade Speed",
+    Desc = "Automatically upgrade speed at the set interval",
     Value = false,
     Callback = function(state)
         running = state
@@ -284,8 +287,8 @@ local function parseCash(text)
 end
 local running = false
 local ABL = Tabs.Main:Toggle({
-    Title = "ออโต้ซื้อลัคกี้บล็อก",
-    Desc = "ซื้อลัคกี้บล็อกที่แพงที่สุดที่คุณสามารถซื้อได้",
+    Title = "Auto Buy Best Luckyblock",
+    Desc = "Automatically buy the most expensive pickaxe/luckyblock you can afford",
     Value = false,
     Callback = function(state)
         running = state
@@ -351,11 +354,11 @@ local ABL = Tabs.Main:Toggle({
 -----
 -----
 Tabs.Main:Button({
-    Title = "ขายสมองที่ถืออยู่",
-    Desc = "ขายสมองที่คุณกำลังถืออยู่",
+    Title = "Sell Held Brainrot",
+    Desc = "Sell the Brainrot you are currently holding",
     Callback = function()
         Window:Dialog({
-            Title = "ยืนยันการขาย",
+            Title = "Confirm Sale",
             Button1 = {
                 Title = "Confirm",
                 Callback = function()
@@ -364,8 +367,8 @@ Tabs.Main:Button({
                     local tool = character:FindFirstChildOfClass("Tool")
                     if not tool then
                         Window:Notify({
-                            Title = "ข้อผิดพลาด!",
-                            Desc = "ถือสมองที่ต้องการขาย",
+                            Title = "ERROR!",
+                            Desc = "Equip the Brainrot you want to Sell",
                             Time = 5
                         })
                         return
@@ -404,13 +407,13 @@ Tabs.Main:Button({
 -----
 -----
 Tabs.Main:Button({
-    Title = "เก็บสมองทั้งหมด",
-    Desc = "เก็บสมองทั้งหมดจากแปลงของคุณ",
+    Title = "Pickup All Your Brainrots",
+    Desc = "Pick up all your Brainrots from your plot",
     Callback = function()
         Window:Dialog({
-            Title = "ยืนยันการเก็บ!",
+            Title = "Confirm Pickup!",
             Button1 = {
-                Title = "ยืนยัน",
+                Title = "Confirm",
                 Callback = function()
                     local player = game:GetService("Players").LocalPlayer
                     local username = player.Name
@@ -475,8 +478,8 @@ Tabs.Main:Button({
 local storedParts = {}
 local folder = workspace:WaitForChild("BossTouchDetectors")
 local RBTD = Tabs.Brainrots:Toggle({
-    Title = "ลบตัวตรวจจับบอส",
-    Desc = "จะทำให้มีแค่บอสตัวสุดท้ายที่สามารถจับคุณได้",
+    Title = "Remove Bad Boss Touch Detectors",
+    Desc = "will make it so only the last boss can capture you",
     Value = false,
     Callback = function(state)
         if state then
@@ -500,8 +503,8 @@ local RBTD = Tabs.Brainrots:Toggle({
 -----
 -----
 Tabs.Brainrots:Button({
-    Title = "เทเลพอร์ตไปจุดเก็บ",
-    Desc = "เทเลพอร์ตสมองทั้งหมดไปที่จุดเก็บ",
+    Title = "Teleport to End",
+    Desc = "Teleport all Brainrots to the collection zone",
     Callback = function()
         local modelsFolder = workspace:WaitForChild("RunningModels")
         local target = workspace:WaitForChild("CollectZones"):WaitForChild("base14")
@@ -526,8 +529,8 @@ Tabs.Brainrots:Button({
 Tabs.Brainrots:Section({ Title = "Farming" })
 local running = false
 local AutoFarmToggle = Tabs.Brainrots:Toggle({
-    Title = "ออโต้ฟาร์ม",
-    Desc = "ฟาร์มสมองอัตโนมัติ",
+    Title = "Auto Farm Best Brainrots",
+    Desc = "Automatically spawn and collect the best Brainrots",
     Value = false,
     Callback = function(state)
         running = state
@@ -637,8 +640,8 @@ task.spawn(function()
     end
 end)
 local Toggle = Tabs.Stats:Toggle({
-    Title = "เปิดใช้งานความเร็วลัคกี้บล็อกแบบกำหนดเอง",
-    Desc = "เปิดใช้งานความเร็วลัคกี้บล็อกแบบกำหนดเอง",
+    Title = "Enable Custom Lucky Block Speed",
+    Desc = "Enable custom movement speed for your Lucky Block",
     Value = false,
     Callback = function(state)
         running = state
@@ -654,8 +657,8 @@ local Toggle = Tabs.Stats:Toggle({
 })
 
 local Slider = Tabs.Stats:Slider({
-    Title = "ลัคกี้บล็อกสปีด",
-    Desc = "ปรับความเร็วของลัคกี้บล็อก",
+    Title = "Lucky Block Speed",
+    Desc = "Adjust the movement speed of your Lucky Block",
     Value = 1000,
     Min = 50,
     Max = 3000,
@@ -669,8 +672,8 @@ local Slider = Tabs.Stats:Slider({
 Tabs.Settings:Section({ Title = "Misc" })
 
 Tabs.Settings:Toggle({
-    Title = "ระบบกันหลุด (Anti-AFK)",
-    Desc = "ป้องกันการโดนเตะออกจากเกม",
+    Title = "Anti-AFK",
+    Desc = "Prevents you from being kicked for being idle",
     Value = true,
     Callback = function(Value)
         if Value then
@@ -689,8 +692,8 @@ Tabs.Settings:Toggle({
 })
 
 Window:Notify({
-    Title = "โหลดสำเร็จแล้ว",
-    Desc = "สคริปต์ Be a Lucky Block โหลดสำเร็จแล้ว!",
+    Title = "Loaded",
+    Desc = "Be a Lucky Block script loaded successfully!",
     Time = 5
 })
 end
