@@ -6,6 +6,7 @@ local RunService       = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace        = game:GetService("Workspace")
 local CoreGui          = game:GetService("CoreGui")
+local ReplicatedStorage= game:GetService("ReplicatedStorage")
 local LocalPlayer      = Players.LocalPlayer
 
 local S = {
@@ -1062,8 +1063,218 @@ local PLACES={
 }
 for _,place in ipairs(PLACES)do local p=place TTp:Button({Title="→ "..p.name,Callback=function()TeleportTo(p.pos)Win:Notify({Title="Teleported",Desc="Moved to "..p.name,Time=3})end})end
 
+local function grabKnife()
+    local char = LocalPlayer.Character
+    if not char then return nil, nil end
+    for _, v in ipairs(char:GetChildren()) do
+        local skinRem = v:FindFirstChild("Scripts") and v.Scripts:FindFirstChild("System") and v.Scripts.System:FindFirstChild("Skin")
+        local hitRem = v:FindFirstChild("Scripts") and v.Scripts:FindFirstChild("System") and v.Scripts.System:FindFirstChild("Hit")
+        if skinRem and hitRem then
+            return skinRem, hitRem
+        end
+    end
+    return nil, nil
+end
+
+local function grabGun()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    for _, v in ipairs(char:GetChildren()) do
+        local hit = v:FindFirstChild("Scripts") and v.Scripts:FindFirstChild("System") and v.Scripts.System:FindFirstChild("Hit")
+        if hit then return hit end
+    end
+    return nil
+end
+
+local function grabBullet()
+    local b = nil
+    pcall(function() b = ReplicatedStorage.Stuff.Bullets.NormalBullet end)
+    return b
+end
+
+local function grabTorso(char)
+    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+end
+
+local function shootFucker(target)
+    local hitRem = grabGun()
+    if not hitRem then return end
+    local bullet = grabBullet()
+    if not bullet then return end
+    local torso = grabTorso(target)
+    if not torso then return end
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    local startPos = myRoot.Position
+    local hitPos = torso.Position
+    local dir = (hitPos - startPos).Unit
+    local hum = target:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    pcall(function()
+        hitRem:FireServer({
+            DistanceMade = vector.create(hitPos.X - startPos.X, hitPos.Y - startPos.Y, hitPos.Z - startPos.Z),
+            StartPosition = vector.create(startPos.X, startPos.Y, startPos.Z),
+            HitMaterial = Enum.Material.Plastic,
+            Ray = nil,
+            ShootDirection = vector.create(dir.X, dir.Y, dir.Z),
+            HitPos = vector.create(hitPos.X, hitPos.Y, hitPos.Z),
+            RayHit = torso,
+            HitPart = hum,
+            Bullet = bullet,
+        })
+    end)
+end
+
+local function getAliveAnimals()
+    local list = {}
+    local folder = nil
+    pcall(function() folder = Workspace.Living.Animals end)
+    if not folder then return list end
+    for _, a in ipairs(folder:GetChildren()) do
+        local hum = a:FindFirstChildOfClass("Humanoid")
+        if hum and hum.Health > 0 then
+            table.insert(list, a)
+        end
+    end
+    return list
+end
+
+local function getAlivePlayers()
+    local list = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health > 0 then
+                table.insert(list, plr.Character)
+            end
+        end
+    end
+    return list
+end
+
+local TFarm = Win:Tab({Title = "Automation", Icon = "sword"})
+
+TFarm:Section({Title = "Looting"})
+local PickConn = nil
+TFarm:Toggle({Title="Auto Pickup",Value=false,Callback=function(state)
+    if state then
+        PickConn = RunService.Heartbeat:Connect(function()
+            local rem = nil
+            pcall(function() rem = ReplicatedStorage.Events.Player.PickUp end)
+            if not rem then return end
+            local ground = Workspace:FindFirstChild("ItemsOnTheGround")
+            if not ground then return end
+            for _, item in ipairs(ground:GetChildren()) do
+                pcall(function() rem:FireServer(item) end)
+            end
+        end)
+    else
+        if PickConn then PickConn:Disconnect() PickConn = nil end
+    end
+end})
+
+local SellConn = nil
+local SellTick = 0
+TFarm:Toggle({Title="Auto Sell",Value=false,Callback=function(state)
+    if state then
+        SellTick = 0
+        SellConn = RunService.Heartbeat:Connect(function(dt)
+            SellTick = SellTick + dt
+            if SellTick < 1 then return end
+            SellTick = 0
+            local rem = nil
+            pcall(function() rem = ReplicatedStorage.Events.Player.Sell end)
+            if not rem then return end
+            local inv = LocalPlayer:FindFirstChild("Inventory")
+            if not inv then return end
+            local items = inv:GetChildren()
+            if #items == 0 then return end
+            local batch = {}
+            for i = 1, math.min(50, #items) do
+                table.insert(batch, items[i])
+            end
+            pcall(function() rem:InvokeServer(batch) end)
+        end)
+    else
+        if SellConn then SellConn:Disconnect() SellConn = nil end
+    end
+end})
+
+TFarm:Section({Title = "Combat"})
+S.KillRange = 200
+TFarm:Slider({Title="Kill Range",Min=50,Max=5000,Rounding=0,Value=S.KillRange,Callback=function(v)S.KillRange=v end})
+
+S.KillTarget = "Animals"
+TFarm:Dropdown({Title="Kill Target",List={"Animals","Players","All"},Value=S.KillTarget,Callback=function(v)S.KillTarget=v end})
+
+local KillConn = nil
+TFarm:Toggle({Title="Kill Aura",Value=false,Callback=function(state)
+    if state then
+        KillConn = RunService.Heartbeat:Connect(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+            local targets = {}
+            if S.KillTarget == "Animals" or S.KillTarget == "All" then
+                for _, t in ipairs(getAliveAnimals()) do table.insert(targets, t) end
+            end
+            if S.KillTarget == "Players" or S.KillTarget == "All" then
+                for _, t in ipairs(getAlivePlayers()) do table.insert(targets, t) end
+            end
+            for _, target in ipairs(targets) do
+                local torso = grabTorso(target)
+                if torso and (root.Position - torso.Position).Magnitude <= S.KillRange then
+                    shootFucker(target)
+                end
+            end
+        end)
+    else
+        if KillConn then KillConn:Disconnect() KillConn = nil end
+    end
+end})
+
+local ProcRunning = false
+TFarm:Toggle({Title="Auto Process Corpse",Value=false,Callback=function(state)
+    ProcRunning = state
+    if not state then return end
+    task.spawn(function()
+        while ProcRunning do
+            local skinRem, knifeRem = grabKnife()
+            if skinRem and knifeRem then
+                local folder = nil
+                pcall(function() folder = Workspace.Living.Animals end)
+                if folder then
+                    for _, animal in ipairs(folder:GetChildren()) do
+                        local hum = animal:FindFirstChildOfClass("Humanoid")
+                        if hum and hum.Health <= 0 then
+                            local mdlFolder = animal:FindFirstChild("Model")
+                            local mdlPart = mdlFolder and mdlFolder:FindFirstChildWhichIsA("BasePart")
+                            if mdlPart then
+                                for _ = 1, 10 do
+                                    pcall(function() skinRem:FireServer(animal, mdlPart, mdlPart.CFrame) end)
+                                end
+                            end
+
+                            for _, child in ipairs(animal:GetChildren()) do
+                                if child.Name:sub(1, 5) == "Limb_" then
+                                    local lp = child:FindFirstChildWhichIsA("BasePart") or child
+                                    for _ = 1, 10 do
+                                        pcall(function() knifeRem:FireServer(child, "LightAttack1", lp.CFrame) end)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end})
+
 local TMisc = Win:Tab({Title = "Misc", Icon = "tag"})
-TMisc:Section({Title = "Distance & Rate"})
+TMisc:Section({Title = "Distance & Rate"})  
 TMisc:Slider({Title="Max ESP Distance (m)",Min=100,Max=5000,Rounding=0,Value=S.MaxDist,Callback=function(v)S.MaxDist=v end})
 TMisc:Slider({Title="Update Every N Frames",Min=1,Max=8,Rounding=0,Value=S.ESPRate,Callback=function(v)S.ESPRate=v end})
 TMisc:Section({Title = "Actions"})
