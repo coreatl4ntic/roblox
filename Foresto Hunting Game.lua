@@ -1173,32 +1173,32 @@ TFarm:Toggle({Title="Auto Pickup",Value=false,Callback=function(state)
     end
 end})
 
-local SellConn = nil
-local SellTick = 0
-TFarm:Toggle({Title="Auto Sell",Value=false,Callback=function(state)
-    if state then
-        SellTick = 0
-        SellConn = RunService.Heartbeat:Connect(function(dt)
-            SellTick = SellTick + dt
-            if SellTick < 1 then return end
-            SellTick = 0
-            local rem = nil
-            pcall(function() rem = ReplicatedStorage.Events.Player.Sell end)
-            if not rem then return end
-            local inv = LocalPlayer:FindFirstChild("Inventory")
-            if not inv then return end
-            local items = inv:GetChildren()
-            if #items == 0 then return end
-            local batch = {}
-            for i = 1, math.min(50, #items) do
-                table.insert(batch, items[i])
-            end
-            pcall(function() rem:InvokeServer(batch) end)
-        end)
-    else
-        if SellConn then SellConn:Disconnect() SellConn = nil end
-    end
-end})
+-- local SellConn = nil
+-- local SellTick = 0
+-- TFarm:Toggle({Title="Auto Sell",Value=false,Callback=function(state)
+--     if state then
+--         SellTick = 0
+--         SellConn = RunService.Heartbeat:Connect(function(dt)
+--             SellTick = SellTick + dt
+--             if SellTick < 1 then return end
+--             SellTick = 0
+--             local rem = nil
+--             pcall(function() rem = ReplicatedStorage.Events.Player.Sell end)
+--             if not rem then return end
+--             local inv = LocalPlayer:FindFirstChild("Inventory")
+--             if not inv then return end
+--             local items = inv:GetChildren()
+--             if #items == 0 then return end
+--             local batch = {}
+--             for i = 1, math.min(50, #items) do
+--                 table.insert(batch, items[i])
+--             end
+--             pcall(function() rem:InvokeServer(batch) end)
+--         end)
+--     else
+--         if SellConn then SellConn:Disconnect() SellConn = nil end
+--     end
+-- end})
 
 TFarm:Section({Title = "Combat"})
 S.KillRange = 200
